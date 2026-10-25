@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Island Survival & Crafting</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Rubik:wght@600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- 3D Canvas Container -->
+    <div id="game-container"></div>
+
+    <!-- Crosshair -->
+    <div id="crosshair">
+      <div class="crosshair-dot"></div>
+      <div class="crosshair-ring"></div>
+    </div>
+
+    <!-- Interaction Prompt -->
+    <div id="interaction-prompt" class="hidden">
+      <span class="key-badge">E</span>
+      <span class="prompt-text">Tương tác</span>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notifications"></div>
+
+    <!-- HUD Overlay -->
+    <div id="hud">
+      <!-- Top Bar: Day & Time & Weather -->
+      <div id="top-bar">
+        <div class="time-widget">
+          <span id="time-icon">☀️</span>
+          <span id="day-counter">NGÀY 1</span>
+          <span class="time-separator">|</span>
+          <span id="clock-display">08:00</span>
+        </div>
+        <div class="hud-controls-hint">
+          <span id="hud-btn-backpack" class="hud-btn-hint" title="Bấm để mở balo">[B] Balo</span>
+          <span id="hud-btn-crafting" class="hud-btn-hint" title="Bấm để mở bảng chế tạo">[TAB] Chế Tạo</span>
+          <span id="hud-btn-guide" class="hud-btn-hint" title="Bấm để xem hướng dẫn">[H] Hướng Dẫn</span>
+          <span id="hud-btn-settings" class="hud-btn-hint" title="Bấm để mở cài đặt">[ESC] Cài Đặt</span>
+        </div>
+      </div>
+
+      <!-- Left Bottom: Raft Rustic Vitals Bars -->
+      <div id="vitals-container">
+        <div class="vital-bar-wrap" id="thirst-wrap">
+          <div class="vital-badge" title="Khát">💧</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="thirst-fill" style="width: 100%;"></div>
+            <span class="vital-name">KHÁT</span>
+            <span class="vital-val" id="thirst-val">100</span>
+          </div>
+        </div>
+
+        <div class="vital-bar-wrap" id="hunger-wrap">
+          <div class="vital-badge" title="Đói">🍗</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="hunger-fill" style="width: 100%;"></div>
+            <span class="vital-name">ĐÓI</span>
+            <span class="vital-val" id="hunger-val">100</span>
+          </div>
+        </div>
+
+        <div class="vital-bar-wrap" id="health-wrap">
+          <div class="vital-badge" title="Máu">❤️</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="health-fill" style="width: 100%;"></div>
+            <span class="vital-name">MÁU</span>
+            <span class="vital-val" id="health-val">100</span>
+          </div>
+        </div>
+
+        <div class="vital-bar-wrap" id="stamina-wrap">
+          <div class="vital-badge" title="Thể Lực">⚡</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="stamina-fill" style="width: 100%;"></div>
+            <span class="vital-name">THỂ LỰC</span>
+            <span class="vital-val" id="stamina-val">100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contextual Action Prompt above Hotbar -->
+      <div id="contextual-action-prompt" class="contextual-action-prompt">
+        <span class="prompt-badge-icon" id="contextual-prompt-icon">🪵</span>
+        <span class="prompt-badge-text" id="contextual-prompt-text">Nguyên liệu Chế tạo & Xây dựng — Nhấn <kbd class="prompt-kbd">[Chuột Trái]</kbd> hoặc <kbd class="prompt-kbd">[TAB]</kbd> để Mở Bảng Chế Tạo</span>
+      </div>
+
+      <!-- Building Mode Contextual Prompt -->
+      <div id="building-prompt" class="building-mode-hud hidden">
+        <span class="building-hud-icon">🏗️</span>
+        <span class="building-hud-text"><strong>Chế độ Xây dựng:</strong> <kbd class="prompt-kbd">[Chuột Trái]</kbd> Đặt công trình | <kbd class="prompt-kbd">[Giữ Chuột Phải]</kbd> Xoay hướng | <kbd class="prompt-kbd">[Q / ESC]</kbd> Hủy</span>
+      </div>
+
+      <!-- Center Bottom: Raft Wooden Hotbar -->
+      <div id="hotbar-container">
+        <div class="hotbar-side-tab" id="hotbar-btn-backpack" title="Balo [B]">
+          <span class="tab-key">[B]</span>
+          <span class="tab-icon">🎒</span>
+        </div>
+        <div class="hotbar-side-tab" id="hotbar-btn-crafting" title="Chế Tạo [TAB]">
+          <span class="tab-key">[TAB]</span>
+          <span class="tab-icon">🔨</span>
+        </div>
+        <div class="hotbar-slots" id="hotbar-slots">
+          <!-- 8 slots generated dynamically -->
+        </div>
+        <div class="hotbar-side-tab" id="hotbar-btn-guide" title="Hướng Dẫn [H]">
+          <span class="tab-key">[H]</span>
+          <span class="tab-icon">📜</span>
+        </div>
+      </div>
+
+      <!-- Bottom Right: Action Hint -->
+      <div id="action-hint">
+        <div id="equipped-name">Tay không</div>
+        <div id="equipped-desc">Chuột trái để tương tác / thu thập</div>
+      </div>
+    </div>
+
+    <!-- Survival Journal Crafting (Cuốn Sổ Tay Sinh Tồn 2 Trang Giấy Da) -->
+    <div id="crafting-journal" class="journal-overlay hidden">
+      <div class="journal-book">
+        <!-- Gáy sổ ở giữa -->
+        <div class="journal-spine"></div>
+        
+        <!-- Trang trái: Danh mục & Lưới vật phẩm vẽ tay -->
+        <div class="journal-page left-page">
+          <div class="journal-tabs">
+            <button class="j-tab active" data-category="tools">Công Cụ</button>
+            <button class="j-tab" data-category="survival">Sinh Tồn</button>
+            <button class="j-tab" data-category="build">Xây Dựng</button>
+          </div>
+          <div class="recipe-grid-sketch" id="recipe-list">
+            <!-- Các ô icon 48x48 dạng phác thảo mực -->
+          </div>
+        </div>
+
+        <!-- Trang phải: Bản vẽ chi tiết (Blueprint) -->
+        <div class="journal-page right-page">
+          <button id="journal-close-btn" class="journal-close-btn" title="Đóng sổ (TAB / ESC)">&times;</button>
+          <h2 id="blueprint-title" class="sketch-title">Chọn công thức</h2>
+          <div id="blueprint-preview" class="blueprint-sketch-box"></div>
+          <div id="blueprint-materials" class="ink-req-list">
+            <!-- Danh sách nguyên liệu ngắn gọn: VD: Gỗ 2/3, Đá 1/1 -->
+          </div>
+          <button id="btn-do-craft" class="stamp-craft-btn">CHẾ TẠO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Survival Backpack Modal (20 slots, 5x4 Grid) -->
+    <div id="backpack-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card backpack-card">
+        <div class="modal-header">
+          <h2>🎒 BALO SINH TỒN (20 Ô)</h2>
+          <button id="backpack-close-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="backpack-grid" id="backpack-grid">
+            <!-- 20 slots dynamically generated -->
+          </div>
+        </div>
+        <div class="modal-footer backpack-footer">
+          <div class="backpack-hint">
+            💡 <strong>Mẹo:</strong> Click chuột vào <em>Trái Cây / Thức Ăn</em> để ăn hồi phục • Click vào <em>Công Cụ</em> để trang bị xuống Hotbar
+          </div>
+          <div class="craft-hint">Nhấn [B] hoặc [ESC] để đóng</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help & Guide Modal -->
+    <div id="guide-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card guide-card">
+        <div class="modal-header">
+          <h2>📜 HƯỚNG DẪN SINH TỒN TRÊN ĐẢO HOANG</h2>
+          <button id="guide-close-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body guide-content">
+          <div class="guide-section">
+            <h3>🎮 Phím Điều Khiển</h3>
+            <div class="keys-grid">
+              <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>Di chuyển</span></div>
+              <div><kbd>Shift</kbd><span>Chạy nhanh (tiêu hao thể lực)</span></div>
+              <div><kbd>Ctrl</kbd> / <kbd>C</kbd><span>Ngồi xuống / Lén lút (Crouch)</span></div>
+              <div><kbd>Space</kbd><span>Nhảy</span></div>
+              <div><kbd>Chuột Trái</kbd><span>Vung công cụ / Chặt / Đập / Đặt</span></div>
+              <div><kbd>Chuột Phải</kbd> / <kbd>E</kbd><span>Ăn / Uống / Tương tác</span></div>
+              <div><kbd>1 - 8</kbd><span>Chọn ô công cụ nhanh (Hotbar)</span></div>
+              <div><kbd>B</kbd><span>Bật / Tắt Balo Sinh Tồn (20 Ô)</span></div>
+              <div><kbd>Tab</kbd><span>Bật / Tắt Menu Chế Tạo</span></div>
+              <div><kbd>H</kbd><span>Bật / Tắt Bảng Hướng Dẫn</span></div>
+              <div><kbd>Esc</kbd><span>Tạm dừng / Đóng cửa sổ</span></div>
+              <div><kbd>Q</kbd><span>Hủy chế độ xây dựng công trình</span></div>
+              <div><kbd>Chuột Phải</kbd><span>Xoay hướng công trình / Ăn uống</span></div>
+            </div>
+          </div>
+          <div class="guide-section">
+            <h3>🏝️ Mục Tiêu & Cơ Chế Sinh Tồn</h3>
+            <ul>
+              <li><strong>Chặt cây:</strong> Nhìn vào thân cây cọ và nhấp chuột trái để chặt gỗ và lá cọ. Rìu đá tăng gấp đôi tốc độ chặt.</li>
+              <li><strong>Khai thác đá:</strong> Nhấp chuột trái vào các tảng đá để lấy đá và đá lửa (Flint). Cuốc đá đập nhanh gấp đôi.</li>
+              <li><strong>Sinh tồn:</strong> Đói & Khát giảm dần theo thời gian. Nhặt dừa hoặc quả mọng để hồi phục. Khi đói/khát về 0, Máu sẽ tụt!</li>
+              <li><strong>Chế tạo & Xây dựng:</strong> Mở bảng [C] để chế tạo Rìu, Cuốc, Lửa trại, Lều trú ẩn, Máy hứng nước.</li>
+              <li><strong>Lửa trại:</strong> Sưởi ấm ban đêm và hồi máu khi đứng gần 5m.</li>
+              <li><strong>Lều trú ẩn:</strong> Cho phép ngủ qua đêm để hồi phục thể lực và sức khỏe.</li>
+              <li><strong>Máy hứng nước:</strong> Tự động tích lũy nước ngọt từ sương và mưa để uống.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="guide-ok-btn" class="primary-btn">ĐÃ HIỂU - TIẾP TỤC CHƠI</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESC Pause & Settings Modal (Frosted Glass) -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card settings-card">
+        <div class="modal-header">
+          <h2>⚙️ TẠM DỪNG & CÀI ĐẶT</h2>
+          <button id="settings-close-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body settings-content">
+          <div class="setting-row">
+            <label for="setting-sensitivity">Độ nhạy chuột (Sensitivity)</label>
+            <div class="slider-wrapper">
+              <span id="bubble-sensitivity" class="slider-value-bubble">4</span>
+              <input type="range" id="setting-sensitivity" min="1" max="10" step="1" value="4" />
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label for="setting-volume">Âm lượng tổng (Master Volume)</label>
+            <div class="slider-wrapper">
+              <span id="bubble-volume" class="slider-value-bubble">100%</span>
+              <input type="range" id="setting-volume" min="0" max="1" step="0.05" value="1.0" />
+            </div>
+          </div>
+
+          <div class="setting-row toggle-row">
+            <label for="setting-shadows">Bóng đổ chất lượng cao (Shadows):</label>
+            <input type="checkbox" id="setting-shadows" checked />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="resume-btn" class="primary-btn resume-btn">TIẾP TỤC CHƠI (RESUME)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Start / Click to Play Screen -->
+    <div id="start-screen">
+      <div class="start-card">
+        <h1 class="game-title">ISLAND CRAFT</h1>
+        <p class="game-subtitle">3D First-Person Island Survival & Crafting</p>
+        <div class="start-features">
+          <div class="feature-item">🌲 Địa hình đảo hoang & cây cọ nhiệt đới uốn lượn tự nhiên</div>
+          <div class="feature-item">🌾 Thảm cỏ mềm mại Instanced đung đưa theo từng ngọn gió</div>
+          <div class="feature-item">🌊 Đại dương ngọc lam dập dềnh sóng êm ả với bọt trắng ven bờ</div>
+          <div class="feature-item">☁️ Mây cumulus 3D bồng bềnh chuyển sắc theo chu kỳ ngày đêm 6 phút</div>
+          <div class="feature-item">⛏️ Khai thác, chế tạo công cụ & xây dựng sinh tồn chân thực</div>
+        </div>
+        <button id="start-btn" class="glow-btn">BẮT ĐẦU SINH TỒN</button>
+        <p class="start-note">Nhấp chuột để khóa con trỏ và kích hoạt âm thanh</p>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="modal hidden">
+      <div class="modal-card death-card">
+        <h1 class="death-title">BẠN ĐÃ TỬ NẠN</h1>
+        <p class="death-cause" id="death-reason">Bạn đã gục ngã vì điều kiện khắc nghiệt của hòn đảo.</p>
+        <div class="death-stats">
+          <div class="death-stat">Số ngày sống sót: <span id="stat-days">1</span></div>
+          <div class="death-stat">Tài nguyên thu thập: <span id="stat-harvested">0</span></div>
+          <div class="death-stat">Công trình đã xây: <span id="stat-crafted">0</span></div>
+        </div>
+        <button id="respawn-btn" class="glow-btn">HỒI SINH TRÊN BÃI BIỂN</button>
+      </div>
+    </div>
+
+    <!-- Sleep Screen Transition -->
+    <div id="sleep-overlay" class="hidden">
+      <div class="sleep-text">Đang ngủ qua đêm... 🌙</div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
